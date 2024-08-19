@@ -1,0 +1,18 @@
+[package]
+name = "movy_rs"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+declarative_enum_dispatch = "0.1.2"
+derive_more = { version = "0.99.18", features = ["from"] }
+pest = "2.7.11"
+pest_derive = "2.7.11"
+regex = "1.10.6"
+
+[[bin]]
+name = "movy_rs"
+
+[[example]]
+name = "csv_parser"
+crate-type = ["bin"]

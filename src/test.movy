@@ -1,0 +1,15 @@
+---
+# root: /mnt/DiscoExterno/Users/Alan/Documents/_Arquivos/PDFs
+root: /home/alan/Downloads
+simulate: 12
+ignore_exceptions: false
+ignore_all_exceptions: false
+---
+
+
+[[USP; sdf=asdf; asdf=asdf; asdf=asdf]]
+# echo -> {filename}\:    \ {flags}
+
+# basename: Cargo
+basename: r/t$/
+move -> /mnt/DiscoExterno/Users/Alan/Documents/_Arquivos/PDFs/USP

@@ -1,0 +1,36 @@
+// common
+COMMENT = _{ "#" ~ (!NEWLINE ~ ANY)+ ~ NEWLINE }
+WHITESPACE = _{ " " }
+
+EMPTY_LINE = _{ NEWLINE+ }
+
+// values
+boolean = { ("true" | "false") }
+string = { (ASCII_ALPHANUMERIC | "/" | "\\" | "_" | " ")+ }
+number = { (ASCII_DIGIT | ".")+ }
+
+regex_flag = { 'a'..'z' }
+regex_content = { (!("/") ~ (ASCII_ALPHANUMERIC | SYMBOL | "\\/"))+ }
+regex = { "r/" ~ regex_content ~ "/" ~ regex_flag* ~ &NEWLINE}
+
+// key value
+key = ${ (!(WHITE_SPACE) ~ (ASCII_ALPHA | "_"))+ }
+value = ${ (boolean | number | regex | string) }
+
+// preamble
+preamble_item = { key ~ ":" ~ value ~ &NEWLINE }
+preamble = { "---" ~ NEWLINE ~ (preamble_item ~ NEWLINE)+ ~ "---"}
+
+// header
+header_item = { key ~ "=" ~ value }
+pipeline_header = { "[[" ~ key ~ (";" ~ header_item)* ~ "]]" }
+
+// rules
+filter = { key ~ ":" ~ value ~ &NEWLINE }
+action = { key ~ "->" ~ value ~ &NEWLINE }
+
+// pipeline
+pipeline = {pipeline_header ~ EMPTY_LINE ~ ((filter | action) ~ EMPTY_LINE*)+}
+
+// file
+file = { SOI ~ EMPTY_LINE* ~ preamble? ~ EMPTY_LINE* ~ (pipeline)* ~ EOI }
