@@ -3,13 +3,14 @@ use pest_derive::Parser;
 
 use std::collections::HashMap;
 use std::fs;
+use std::path::Path;
 
 use crate::error::{Error, Result};
 use crate::movy::{Movy, Pipeline, Value};
-use crate::rules;
+use crate::pipes;
 
 #[derive(Parser)]
-#[grammar = "movy.pest"]
+#[grammar = "grammar/movy.pest"]
 pub struct MovyParser;
 
 #[derive(Debug)]
@@ -39,11 +40,13 @@ pub enum Token<'a> {
         key: &'a str,
         value: Box<Token<'a>>,
         span: Span<'a>,
+        raw: &'a str,
     },
     Action {
         key: &'a str,
         value: Box<Token<'a>>,
         span: Span<'a>,
+        raw: &'a str,
     },
     Value(ValueToken<'a>),
 }
@@ -91,10 +94,10 @@ impl Pipeline {
 
         let rules = rules_vec_token
             .iter()
-            .map(|token| rules::Rule::parse(token))
-            .collect::<Result<Vec<rules::Rule>>>()?;
+            .map(|token| pipes::Pipe::parse(token))
+            .collect::<Result<Vec<pipes::Pipe>>>()?;
 
-        Ok(Pipeline::new(String::from(*name), properties, rules, Vec::new()))
+        Ok(Pipeline::new(String::from(*name), properties, rules))
     }
 }
 
@@ -113,17 +116,31 @@ impl Value {
     }
 }
 
-impl rules::Rule {
+impl pipes::Pipe {
     fn parse(token: &Token) -> Result<Self> {
-        use rules::{Basename, Move};
+        use pipes::{Basename, Move};
 
         match token {
-            Token::Filter { key, value, span } => match *key {
-                "basename" => Ok(Basename::new(key, Value::parse(value.as_ref())?)),
+            Token::Filter {
+                key,
+                value,
+                span,
+                raw,
+            } => match *key {
+                "basename" => Ok(Basename::new(
+                    key,
+                    Value::parse(value.as_ref())?,
+                    (*raw).into(),
+                )),
                 _ => Err(Error::from_span("Unknown filter".to_string(), *span)),
             },
-            Token::Action { key, value, span } => match *key {
-                "move" => Ok(Move::new(key, Value::parse(value.as_ref())?)),
+            Token::Action {
+                key,
+                value,
+                span,
+                raw,
+            } => match *key {
+                "move" => Ok(Move::new(key, Value::parse(value.as_ref())?, (*raw).into())),
                 _ => Err(Error::from_span("Unknown action".to_string(), *span)),
             },
             _ => Err(Error::Generic(
@@ -135,7 +152,7 @@ impl rules::Rule {
 
 impl Movy {
     pub fn from_file(filename: &str) -> Result<Movy> {
-        let unparsed_file = fs::read_to_string(filename)?;
+        let unparsed_file = fs::read_to_string(Path::new(filename))?;
 
         let movy_ast = MovyParser::parse_file(&unparsed_file)?;
         MovyParser::parse_ast(movy_ast)
@@ -215,6 +232,7 @@ impl MovyParser {
                 Rule::filter => {
                     let mut inner_pairs = pair.into_inner();
 
+                    let raw = inner_pairs.as_str();
                     let key_pair = inner_pairs.next().unwrap();
                     let span = key_pair.as_span();
 
@@ -225,11 +243,13 @@ impl MovyParser {
                         key,
                         value: Box::new(value),
                         span,
+                        raw,
                     }
                 }
                 Rule::action => {
                     let mut inner_pairs = pair.into_inner();
 
+                    let raw = inner_pairs.as_str();
                     let key_pair = inner_pairs.next().unwrap();
                     let span = key_pair.as_span();
 
@@ -240,6 +260,7 @@ impl MovyParser {
                         key,
                         value: Box::new(value),
                         span,
+                        raw,
                     }
                 }
                 Rule::value => Token::Value(parse_value(pair.into_inner().next().unwrap())),

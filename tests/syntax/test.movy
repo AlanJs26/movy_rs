@@ -1,7 +1,7 @@
 ---
 # root: /mnt/DiscoExterno/Users/Alan/Documents/_Arquivos/PDFs
 root: /home/alan/Downloads
-simulate: 12
+simulate: true
 ignore_exceptions: false
 ignore_all_exceptions: false
 ---

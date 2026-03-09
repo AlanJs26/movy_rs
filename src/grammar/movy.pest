@@ -18,7 +18,12 @@ key = ${ (!(WHITE_SPACE) ~ (ASCII_ALPHA | "_"))+ }
 value = ${ (boolean | number | regex | string) }
 
 // preamble
-preamble_item = { key ~ ":" ~ value ~ &NEWLINE }
+preamble_item = { 
+  ((&"simulate" ~ key) ~ ":" ~ (&boolean ~ value) ~ &NEWLINE) 
+  | ((&"quiet" ~ key) ~ ":" ~ (&boolean ~ value) ~ &NEWLINE) 
+  | ((&"root" ~ key) ~ ":" ~ (&(!number ~ string) ~ value) ~ &NEWLINE) 
+  | ((!"simulate" ~ !"quiet" ~ !"root" ~ key) ~ ":" ~ value ~ &NEWLINE)
+}
 preamble = { "---" ~ NEWLINE ~ (preamble_item ~ NEWLINE)+ ~ "---"}
 
 // header

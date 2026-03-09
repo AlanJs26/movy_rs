@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+clap = { version = "4.5.60", features = ["derive"] }
 declarative_enum_dispatch = "0.1.2"
 derive_more = { version = "0.99.18", features = ["from"] }
 pest = "2.7.11"
@@ -12,7 +13,3 @@ regex = "1.10.6"
 
 [[bin]]
 name = "movy_rs"
-
-[[example]]
-name = "csv_parser"
-crate-type = ["bin"]
